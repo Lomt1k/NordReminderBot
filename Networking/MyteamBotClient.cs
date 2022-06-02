@@ -40,7 +40,7 @@ namespace NordDailyReminder.Networking
         private PollingEvents _polling;
 
         public string token => _config.token;
-        public string chatId => _config.chatId;
+        public string targetChatId => _config.chatId;
         public string API_URL => _config.API_URL;
         public Message[] messages => _config.messages;
 
@@ -50,7 +50,7 @@ namespace NordDailyReminder.Networking
             _polling = new PollingEvents(this, token);
         }
 
-        public async Task<GetBotInfoReslult> GetBotInfo()
+        public async Task<GetBotInfoReslult> GetBotInfoAsync()
         {
             HttpParameter[] parameters = new HttpParameter[]
             {
@@ -73,12 +73,12 @@ namespace NordDailyReminder.Networking
             return new GetBotInfoReslult(true, responseData);
         }
 
-        public async Task<SendMessageResult> SendTextAsync(string text, string? replyMessageId = null, string? specialChatId = null)
+        public async Task<SendMessageResult> SendTextAsync(string chatId, string text, string? replyMessageId = null)
         {
             List<HttpParameter> parameters = new List<HttpParameter>
             {
                 new HttpParameter("token", token),
-                new HttpParameter("chatId", specialChatId ?? chatId),
+                new HttpParameter("chatId", chatId),
                 new HttpParameter("text", text)
             };
             if (replyMessageId != null)
@@ -103,7 +103,7 @@ namespace NordDailyReminder.Networking
             return new SendMessageResult(true, responseData.msgId);
         }
 
-        public async Task<SendMessageResult> SendFileAsync(string fileId, string? caption = null)
+        public async Task<SendMessageResult> SendFileAsync(string chatId, string fileId, string? caption = null)
         {
             List<HttpParameter> parameters = new List<HttpParameter>
             {

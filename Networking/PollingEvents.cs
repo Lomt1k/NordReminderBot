@@ -25,35 +25,42 @@ namespace NordDailyReminder.Networking
             while (true)
             {
                 await Task.Delay(pollTimeInSeconds * 1000);
-                SendGetEventsAsync();
+                GetEventsAsync();
             }
         }
 
-        private async void SendGetEventsAsync()
+        private async void GetEventsAsync()
         {
-            HttpParameter[] parameters = new HttpParameter[]
+            try
             {
-                new HttpParameter("token", _token),
-                new HttpParameter("lastEventId", _lastEventId.ToString()),
-                new HttpParameter("pollTime", pollTimeInSeconds.ToString())
-            };
-            var result = await SimpleHttpClient.GetAsync(_client.API_URL + "/events/get", parameters);
-            if (result == null)
-                return;
+                HttpParameter[] parameters = new HttpParameter[]
+                {
+                    new HttpParameter("token", _token),
+                    new HttpParameter("lastEventId", _lastEventId.ToString()),
+                    new HttpParameter("pollTime", pollTimeInSeconds.ToString())
+                };
+                var result = await SimpleHttpClient.GetAsync(_client.API_URL + "/events/get", parameters);
+                if (result == null)
+                    return;
 
-            var jsonStr = await result.Content.ReadAsStringAsync();
-            // uncomment this for debug json response:
-            //Console.WriteLine(jsonStr);
-            var responseData = JsonConvert.DeserializeObject<PollingEventsData>(jsonStr);
-            if (!responseData.ok)
-            {
-                Console.WriteLine($"PollingEvents Error\n {responseData.description}");
-                return;
+                var jsonStr = await result.Content.ReadAsStringAsync();
+                // uncomment this for debug json response:
+                //Console.WriteLine(jsonStr);
+                var responseData = JsonConvert.DeserializeObject<PollingEventsData>(jsonStr);
+                if (!responseData.ok)
+                {
+                    Console.WriteLine($"PollingEvents Error\n {responseData.description}");
+                    return;
+                }
+
+                foreach (var pollingEvent in responseData.events)
+                {
+                    HandleEvent(pollingEvent);
+                }
             }
-
-            foreach (var pollingEvent in responseData.events)
+            catch (Exception ex)
             {
-                HandleEvent(pollingEvent);
+                Console.WriteLine($"Catched exception in GetEventsAsync\n{ex}");
             }
         }
 
@@ -91,9 +98,7 @@ namespace NordDailyReminder.Networking
                     Console.WriteLine($"Тип файла: {partPayload.type}");
                     Console.WriteLine($"fileId: {partPayload.fileId}");
 
-                    _client.SendTextAsync($"fileId: {partPayload.fileId}", 
-                        replyMessageId: payload.msgId, 
-                        specialChatId: payload.chat.chatId);
+                    _client.SendTextAsync(payload.chat.chatId, $"fileId: {partPayload.fileId}", replyMessageId: payload.msgId);
                 }
             }
         }
