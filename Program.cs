@@ -85,21 +85,24 @@ namespace NordDailyReminder
         {
             while (true)
             {
-                var dateTime = DateTime.Now;
-                if (dateTime.DayOfWeek == DayOfWeek.Sunday || dateTime.DayOfWeek == DayOfWeek.Saturday || dateTime.Hour != 10)
+                var dt = DateTime.Now;
+                var targetTime = client.config.targetTime;
+
+                if (dt.DayOfWeek == DayOfWeek.Sunday || dt.DayOfWeek == DayOfWeek.Saturday || dt.Hour != targetTime.hour)
                 {
-                    await SleepAsync(1800);
+                    var secondsToNewHour = (60 - dt.Minute) * 60;
+                    await SleepAsync(secondsToNewHour);
                     continue;
                 }
 
-                if (dateTime.Minute < 57)
+                if (dt.Minute < targetTime.minute || (dt.Minute == targetTime.minute && dt.Second < targetTime.second))
                 {
                     await SleepAsync(10);
                     continue;
                 }
 
                 SendRandomMessageAsync();
-                await SleepAsync(1800);
+                await SleepAsync(3600);
             }
         }
 
@@ -114,7 +117,7 @@ namespace NordDailyReminder
 
         private static async Task SendRandomMessageAsync()
         {
-            var messages = client.messages;
+            var messages = client.config.messages;
             if (messages.Length < 1)
                 return;
 

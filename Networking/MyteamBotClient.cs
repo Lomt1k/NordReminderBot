@@ -42,7 +42,7 @@ namespace NordDailyReminder.Networking
         public string token => _config.token;
         public string targetChatId => _config.chatId;
         public string API_URL => _config.API_URL;
-        public Message[] messages => _config.messages;
+        public Config config => _config;
 
         public MyteamBotClient(Config config)
         {
